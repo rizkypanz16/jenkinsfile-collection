@@ -1,0 +1,28 @@
+pipeline {
+  agent any
+
+  stages {
+    stage('Deploy to Nodes') {
+      parallel {
+        stage('Jenkins Slave 1') {
+          agent {
+            label 'jenkins-slave-1'
+          }
+          steps {
+            sh 'echo "Deploying to Jenkins Slave 1"'
+            sh 'docker run -itd --name nginx-node-1 -p 80:80 nginx'
+          }
+        }
+        stage('Jenkins Slave 2') {
+          agent {
+            label 'jenkins-slave-2'
+          }
+          steps {
+            sh 'echo "Deploying to Jenkins Slave 2"'
+            sh 'docker run -itd --name nginx-node-2 -p 80:80 nginx'
+          }
+        }
+      }
+    }
+  }
+}
