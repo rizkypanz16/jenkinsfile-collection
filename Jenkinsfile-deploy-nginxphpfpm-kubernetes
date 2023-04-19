@@ -1,0 +1,35 @@
+pipeline {
+  agent any
+  
+    stages {
+        stage('Build dockerfile') {
+            agent {
+                label 'jenkins-master'
+            }
+            steps {
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/rizkypanz16/dockerfile-nginx-phpfpm']])
+                sh 'ls'
+                sh 'docker login 192.168.7.61:443 -u admin -p ijinmasuk'
+                sh 'docker build -t 192.168.7.61:443/nginx-phpfpm:latest .'
+                sh 'docker push 192.168.7.61:443/nginx-phpfpm:latest'
+                echo 'Start Build'
+                echo 'Build successfully'
+            }
+        }
+        stage('Deploy Kubernetes'){
+            agent {
+                label 'kube1'
+            }
+            steps {
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/rizkypanz16/kubernetes-yaml-config']])
+                sh 'ls'
+                sh 'kubectl apply -f deployment-kubeapp-with-imagepullsecret-pv-service.yaml'
+                sh 'kubectl get deployment'
+                sh 'kubectl get pods'
+                sh 'kubectl get service'
+                echo 'Start Deploying app'
+                echo 'Deploy successfully'
+            }
+        }
+    }
+}
