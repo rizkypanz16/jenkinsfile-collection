@@ -1,12 +1,16 @@
 pipeline {
     agent any
     tools {nodejs "node"}
+    environment {
+        GIT_REPO_URL = "https://github.com/rizkypanz16/jenkins-reactjs-project.git"
+        GIT_BRANCH = "dev"
+    }
 
     stages {
         stage('Checkout Repository') {
             steps {
-                echo 'Building..'
-                git branch: 'dev', url: 'https://github.com/rizkypanz16/jenkins-reactjs-project.git'
+                // git branch: 'dev', url: 'https://github.com/rizkypanz16/jenkins-reactjs-project.git'
+                git branch: "${GIT_BRANCH}", url: "${GIT_REPO_URL}"
             }
         }
         stage('Static Code Analysis') {
@@ -30,7 +34,7 @@ pipeline {
             steps{
                 script{
                     // digunakan untuk menunggu penyelesaian dan hasil dari analisis kualitas perangkat lunak sebelum melanjutkan eksekusi pipeline.
-                    timeout(5) {
+                    timeout(1) {
                         def qualityGate = waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonar'
                         // abortPipeline: false
                         echo qualityGate.status
