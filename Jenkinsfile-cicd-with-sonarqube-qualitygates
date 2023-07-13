@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+    tools {nodejs "node"}
+
+    stages {
+        stage('Checkout Repository') {
+            steps {
+                echo 'Building..'
+                git branch: 'dev', url: 'https://github.com/rizkypanz16/jenkins-reactjs-project.git'
+            }
+        }
+        stage('Static Code Analysis') {
+            steps {
+                echo 'Testing..'
+                script{
+                    // memungkinkan Jenkins berkomunikasi dengan server SonarQube dan menerapkan analisis kualitas kode yang diperlukan.
+                    withSonarQubeEnv(credentialsId: 'jenkins-sonar') {
+                        sh '''
+                            sonar-scanner \
+                                -Dsonar.projectKey=jenkins-sonarscan2 \
+                                -Dsonar.sources=. \
+                                -Dsonar.host.url=http://192.168.0.128:9000 \
+                                -Dsonar.token=sqp_9c16e7a85e13117d74c653a428b0aff37308bd2e
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Quality Gate Checking'){
+            steps{
+                script{
+                    // digunakan untuk menunggu penyelesaian dan hasil dari analisis kualitas perangkat lunak sebelum melanjutkan eksekusi pipeline.
+                    timeout(5) {
+                        def qualityGate = waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonar'
+                        // abortPipeline: false
+                        echo qualityGate.status
+                    }
+                }
+            }
+        }
+    }
+}
