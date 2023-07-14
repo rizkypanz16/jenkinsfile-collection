@@ -32,13 +32,35 @@ pipeline {
         }
         stage('Quality Gate Checking'){
             steps{
+                // digunakan untuk menunggu penyelesaian dan hasil dari analisis kualitas perangkat lunak sebelum melanjutkan eksekusi pipeline.
+                // timeout(time: 30, unit: 'SECONDS') {
+                    //catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
+                        script{
+                            def qualityGate = waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonar'
+                            // abortPipeline: false
+                            echo qualityGate.status
+                        }
+                    //}
+                //}
+            }
+        }
+        stage('Build App'){
+            steps{
                 script{
-                    // digunakan untuk menunggu penyelesaian dan hasil dari analisis kualitas perangkat lunak sebelum melanjutkan eksekusi pipeline.
-                    timeout(1) {
-                        def qualityGate = waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonar'
-                        // abortPipeline: false
-                        echo qualityGate.status
-                    }
+                    sh '''
+                    npm install
+                    npm run build
+                    '''
+                }
+            }
+        }
+        stage('Deploy App'){
+            steps{
+                script{
+                    sh '''
+                    pm2 start ecosystem.config.js
+                    pm2 list
+                    '''
                 }
             }
         }
